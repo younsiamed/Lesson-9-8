@@ -1,68 +1,42 @@
 #include "udpworker.h"
 
-UDPworker::UDPworker(QObject *parent) : QObject(parent)
+UDPworker::UDPworker(QObject *parent)
+    : QObject(parent)
 {
-
-
-
+    udpSocket = new QUdpSocket(this);
 }
 
-
-/*!
- * @brief Метод инициализирует UDP сервер
- */
-void UDPworker::InitSocket()
+bool UDPworker::bindSocket(quint16 port)
 {
-
-    serviceUdpSocket = new QUdpSocket(this);
-    /*
-     * Соединяем присваиваем адрес и порт серверу и соединяем функцию
-     * обраотчик принятых пакетов с сокетом
-     */
-    serviceUdpSocket->bind(QHostAddress::LocalHost, BIND_PORT);
-
-    connect(serviceUdpSocket, &QUdpSocket::readyRead, this, &UDPworker::readPendingDatagrams);
-
+    localPort = port;
+    bool result = udpSocket->bind(QHostAddress::LocalHost, localPort);
+    if (result)
+        connect(udpSocket, &QUdpSocket::readyRead, this, &UDPworker::processPendingDatagrams);
+    return result;
 }
 
-/*!
- * @brief Метод осуществляет обработку принятой датаграммы
- */
-void UDPworker::ReadDatagram(QNetworkDatagram datagram)
+void UDPworker::sendDatagram(const QString &message)
 {
-
-    QByteArray data;
-    data = datagram.data();
-
-
-    QDataStream inStr(&data, QIODevice::ReadOnly);
-    QDateTime dateTime;
-    inStr >> dateTime;
-
-    emit sig_sendTimeToGUI(dateTime);
-}
-/*!
- * @brief Метод осуществляет опередачу датаграммы
- */
-void UDPworker::SendDatagram(QByteArray data)
-{
-    /*
-     *  Отправляем данные на localhost и задефайненный порт
-     */
-    serviceUdpSocket->writeDatagram(data, QHostAddress::LocalHost, BIND_PORT);
+    QByteArray datagram = message.toUtf8();
+    udpSocket->writeDatagram(datagram, QHostAddress::LocalHost, localPort);
 }
 
-/*!
- * @brief Метод осуществляет чтение датаграм из сокета
- */
-void UDPworker::readPendingDatagrams( void )
+void UDPworker::processPendingDatagrams()
 {
-    /*
-     *  Производим чтение принятых датаграмм
-     */
-    while(serviceUdpSocket->hasPendingDatagrams()){
-            QNetworkDatagram datagram = serviceUdpSocket->receiveDatagram();
-            ReadDatagram(datagram);
+    while (udpSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(int(udpSocket->pendingDatagramSize()));
+        QHostAddress sender;
+        quint16 senderPort;
+
+        udpSocket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+
+        QString info = QString("Принято сообщение от %1:%2 — \"%3\" (%4 байт)")
+                           .arg(sender.toString())
+                           .arg(senderPort)
+                           .arg(QString::fromUtf8(datagram))
+                           .arg(datagram.size());
+
+        emit datagramReceived(info);
     }
-
 }

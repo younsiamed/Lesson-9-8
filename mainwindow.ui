@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>420</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>UDP Chat</string>
+   <string>UDP Messenger</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QLineEdit" name="lineEditMessage">
       <property name="placeholderText">
-       <string>Введите сообщение</string>
+       <string>Введите сообщение...</string>
       </property>
      </widget>
     </item>
@@ -33,6 +33,9 @@
      <widget class="QTextEdit" name="textEditReceived">
       <property name="readOnly">
        <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>Здесь будут отображаться принятые сообщения...</string>
       </property>
      </widget>
     </item>

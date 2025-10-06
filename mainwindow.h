@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QUdpSocket>
+#include "udpworker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,13 +17,12 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButtonSend_clicked();    // слот для кнопки "Отправить датаграмму"
-    void processPendingDatagrams();      // слот для приема сообщений
+    void on_pushButtonSend_clicked();
+    void onDatagramReceived(const QString &info);
 
 private:
     Ui::MainWindow *ui;
-    QUdpSocket *udpSocket;
-    quint16 localPort = 12345;          // порт для приёма и отправки
+    UDPworker *udpWorker;
 };
 
 #endif // MAINWINDOW_H
