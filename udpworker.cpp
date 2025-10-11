@@ -1,42 +1,42 @@
 #include "udpworker.h"
 
-UDPworker::UDPworker(QObject *parent)
-    : QObject(parent)
+UDPworker::UDPworker(QObject *parent) : QObject(parent)
 {
-    udpSocket = new QUdpSocket(this);
 }
 
-bool UDPworker::bindSocket(quint16 port)
+void UDPworker::InitSocket()
 {
-    localPort = port;
-    bool result = udpSocket->bind(QHostAddress::LocalHost, localPort);
-    if (result)
-        connect(udpSocket, &QUdpSocket::readyRead, this, &UDPworker::processPendingDatagrams);
-    return result;
+    serviceUdpSocket = new QUdpSocket(this);
+    serviceUdpSocket->bind(QHostAddress::LocalHost, BIND_PORT);
+    connect(serviceUdpSocket, &QUdpSocket::readyRead, this, &UDPworker::readPendingDatagrams);
 }
 
-void UDPworker::sendDatagram(const QString &message)
+void UDPworker::ReadDatagram(QNetworkDatagram datagram)
 {
-    QByteArray datagram = message.toUtf8();
-    udpSocket->writeDatagram(datagram, QHostAddress::LocalHost, localPort);
+    QByteArray data = datagram.data();
+    QDataStream inStr(&data, QIODevice::ReadOnly);
+
+    if (data.startsWith("TXT:")) {
+        QString message;
+        inStr.skipRawData(4);
+        inStr >> message;
+        emit sig_sendTextToGUI(datagram.senderAddress().toString(), message, data.size());
+    } else {
+        QDateTime dateTime;
+        inStr >> dateTime;
+        emit sig_sendTimeToGUI(dateTime);
+    }
 }
 
-void UDPworker::processPendingDatagrams()
+void UDPworker::SendDatagram(QByteArray data)
 {
-    while (udpSocket->hasPendingDatagrams()) {
-        QByteArray datagram;
-        datagram.resize(int(udpSocket->pendingDatagramSize()));
-        QHostAddress sender;
-        quint16 senderPort;
+    serviceUdpSocket->writeDatagram(data, QHostAddress::LocalHost, BIND_PORT);
+}
 
-        udpSocket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
-
-        QString info = QString("Принято сообщение от %1:%2 — \"%3\" (%4 байт)")
-                           .arg(sender.toString())
-                           .arg(senderPort)
-                           .arg(QString::fromUtf8(datagram))
-                           .arg(datagram.size());
-
-        emit datagramReceived(info);
+void UDPworker::readPendingDatagrams()
+{
+    while(serviceUdpSocket->hasPendingDatagrams()){
+        QNetworkDatagram datagram = serviceUdpSocket->receiveDatagram();
+        ReadDatagram(datagram);
     }
 }

@@ -1,28 +1,30 @@
 #ifndef UDPWORKER_H
 #define UDPWORKER_H
 
-#include <QObject>
 #include <QUdpSocket>
-#include <QHostAddress>
+#include <QNetworkDatagram>
+#include <QDateTime>
+
+#define BIND_PORT 12345
 
 class UDPworker : public QObject
 {
     Q_OBJECT
 public:
     explicit UDPworker(QObject *parent = nullptr);
-
-    void sendDatagram(const QString &message);
-    bool bindSocket(quint16 port = 12345);
-
-signals:
-    void datagramReceived(const QString &info);
+    void InitSocket();
+    void ReadDatagram(QNetworkDatagram datagram);
+    void SendDatagram(QByteArray data);
 
 private slots:
-    void processPendingDatagrams();
+    void readPendingDatagrams();
 
 private:
-    QUdpSocket *udpSocket;
-    quint16 localPort = 12345;
+    QUdpSocket* serviceUdpSocket;
+
+signals:
+    void sig_sendTimeToGUI(QDateTime data);
+    void sig_sendTextToGUI(QString sender, QString message, int size);
 };
 
 #endif // UDPWORKER_H

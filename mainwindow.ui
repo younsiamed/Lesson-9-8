@@ -6,43 +6,58 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>320</height>
+    <width>427</width>
+    <height>430</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>UDP Messenger</string>
+   <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLineEdit" name="lineEditMessage">
-      <property name="placeholderText">
-       <string>Введите сообщение...</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButtonSend">
+     <widget class="QLabel" name="lb_receiveData">
       <property name="text">
-       <string>Отправить датаграмму</string>
+       <string>Принятые данные</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="textEditReceived">
-      <property name="readOnly">
-       <bool>true</bool>
+     <widget class="QTextEdit" name="te_result"/>
+    </item>
+	<item>
+ <widget class="QLineEdit" name="le_userMessage">
+  <property name="placeholderText">
+   <string>Введите сообщение для отправки</string>
+  </property>
+ </widget>
+</item>
+<item>
+ <widget class="QPushButton" name="pb_sendMessage">
+  <property name="text">
+   <string>Отправить датаграмму</string>
+  </property>
+ </widget>
+</item>
+    <item>
+     <widget class="QPushButton" name="pb_stop">
+      <property name="text">
+       <string>Остановить передачу</string>
       </property>
-      <property name="placeholderText">
-       <string>Здесь будут отображаться принятые сообщения...</string>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pb_start">
+      <property name="text">
+       <string>Начать передачу</string>
       </property>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar"/>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

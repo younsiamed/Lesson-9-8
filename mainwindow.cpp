@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "./ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -8,9 +8,20 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     udpWorker = new UDPworker(this);
-    udpWorker->bindSocket(12345);
+    udpWorker->InitSocket();
 
-    connect(udpWorker, &UDPworker::datagramReceived, this, &MainWindow::onDatagramReceived);
+    connect(udpWorker, &UDPworker::sig_sendTimeToGUI, this, &MainWindow::DisplayTime);
+    connect(udpWorker, &UDPworker::sig_sendTextToGUI, this, &MainWindow::DisplayText);
+    connect(ui->pb_sendMessage, &QPushButton::clicked, this, &MainWindow::on_pb_sendMessage_clicked);
+
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [&]{
+        QDateTime dateTime = QDateTime::currentDateTime();
+        QByteArray dataToSend;
+        QDataStream outStr(&dataToSend, QIODevice::WriteOnly);
+        outStr << dateTime;
+        udpWorker->SendDatagram(dataToSend);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -18,21 +29,43 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButtonSend_clicked()
+void MainWindow::on_pb_start_clicked()
 {
-    QString message = ui->lineEditMessage->text();
-
-    if (message.isEmpty()) {
-        ui->textEditReceived->append("⚠️ Введите сообщение перед отправкой!");
-        return;
-    }
-
-    udpWorker->sendDatagram(message);
-    ui->textEditReceived->append("✅ Отправлено: " + message);
-    ui->lineEditMessage->clear();
+    timer->start(TIMER_DELAY);
 }
 
-void MainWindow::onDatagramReceived(const QString &info)
+void MainWindow::DisplayTime(QDateTime data)
 {
-    ui->textEditReceived->append(info);
+    counterPck++;
+    if(counterPck % 20 == 0){
+        ui->te_result->clear();
+    }
+
+    ui->te_result->append("Текущее время: " + data.toString() + ". "
+                                                                "Принято пакетов " + QString::number(counterPck));
+}
+
+void MainWindow::DisplayText(QString sender, QString message, int size)
+{
+    ui->te_result->append("Принято сообщение от " + sender +
+                          ", размер сообщения(байт): " + QString::number(size) +
+                          "\nСодержимое: " + message + "\n");
+}
+
+void MainWindow::on_pb_stop_clicked()
+{
+    timer->stop();
+}
+
+void MainWindow::on_pb_sendMessage_clicked()
+{
+    QString userText = ui->le_userMessage->text();
+    if (userText.isEmpty()) return;
+
+    QByteArray dataToSend;
+    QDataStream outStr(&dataToSend, QIODevice::WriteOnly);
+    outStr.writeRawData("TXT:", 4);
+    outStr << userText;
+
+    udpWorker->SendDatagram(dataToSend);
 }

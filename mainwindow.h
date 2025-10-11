@@ -2,7 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
 #include "udpworker.h"
+
+#define TIMER_DELAY 1000
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,12 +20,17 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButtonSend_clicked();
-    void onDatagramReceived(const QString &info);
+    void on_pb_start_clicked();
+    void DisplayTime(QDateTime data);
+    void DisplayText(QString sender, QString message, int size);
+    void on_pb_stop_clicked();
+    void on_pb_sendMessage_clicked();
 
 private:
     Ui::MainWindow *ui;
-    UDPworker *udpWorker;
+    QTimer* timer;
+    UDPworker* udpWorker;
+    uint32_t counterPck = 0;
 };
 
 #endif // MAINWINDOW_H
